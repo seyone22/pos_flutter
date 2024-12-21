@@ -46,6 +46,15 @@ dependencies:
   drift: ^2.19.1+1
   drift_flutter: ^0.2.0
   equatable: ^2.0.5
+  go_router: ^14.6.1
+  intl: ^0.20.1
+  fluent_ui: ^1.2.3
+  file_picker: ^8.1.4
+  system_theme: ^3.1.2
+  window_manager: ^0.4.3
+  flutter_adaptive_scaffold: ^0.3.1
+  fl_chart: ^0.69.2
+  csv: ^6.0.0
 
 dev_dependencies:
   flutter_test:
@@ -59,6 +68,7 @@ dev_dependencies:
   flutter_lints: ^3.0.0
   drift_dev: ^2.19.1
   build_runner: ^2.4.9
+  msix: ^3.16.8
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -101,3 +111,9 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+
+msix_config:
+  display_name: POS
+  publisher_display_name: Aki
+  identity_name: aki.alk.pos
+  msix_version: 1.0.0.0

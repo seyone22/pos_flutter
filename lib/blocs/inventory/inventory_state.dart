@@ -13,9 +13,10 @@ class InventoryInitial extends InventoryState {}
 class InventoryLoading extends InventoryState {}
 
 class InventoryLoaded extends InventoryState {
-  final List<Product> items;
+  final List<ProductData> items;
+  final Map<int, int> sales;
 
-  const InventoryLoaded({required this.items});
+  const InventoryLoaded({required this.items, this.sales = const {}});
 
   @override
   List<Object> get props => [items];

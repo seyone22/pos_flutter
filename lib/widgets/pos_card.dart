@@ -5,10 +5,10 @@ class PosCard extends StatefulWidget {
   final Color defaultOutlineColor;
 
   const PosCard({
-    Key? key,
+    super.key,
     required this.itemName,
     this.defaultOutlineColor = Colors.grey,
-  }) : super(key: key);
+  });
 
   @override
   _PosCardState createState() => _PosCardState();

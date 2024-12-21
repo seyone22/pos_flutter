@@ -3,7 +3,7 @@
 part of 'database.dart';
 
 // ignore_for_file: type=lint
-class $ProductTable extends Product with TableInfo<$ProductTable, products> {
+class $ProductTable extends Product with TableInfo<$ProductTable, ProductData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -22,9 +22,15 @@ class $ProductTable extends Product with TableInfo<$ProductTable, products> {
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
       'name', aliasedName, false,
       additionalChecks:
-          GeneratedColumn.checkTextLength(minTextLength: 0, maxTextLength: 32),
+          GeneratedColumn.checkTextLength(minTextLength: 0, maxTextLength: 64),
       type: DriftSqlType.string,
       requiredDuringInsert: true);
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _priceMeta = const VerificationMeta('price');
   @override
   late final GeneratedColumn<double> price = GeneratedColumn<double>(
@@ -37,21 +43,32 @@ class $ProductTable extends Product with TableInfo<$ProductTable, products> {
       check: () => ComparableExpr(stock).isBiggerThanValue(-1),
       type: DriftSqlType.int,
       requiredDuringInsert: true);
-  static const VerificationMeta _descriptionMeta =
-      const VerificationMeta('description');
+  static const VerificationMeta _skuMeta = const VerificationMeta('sku');
   @override
-  late final GeneratedColumn<String> description = GeneratedColumn<String>(
-      'description', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+  late final GeneratedColumn<String> sku = GeneratedColumn<String>(
+      'sku', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 0, maxTextLength: 32),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _artworkIdMeta =
+      const VerificationMeta('artworkId');
   @override
-  List<GeneratedColumn> get $columns => [id, name, price, stock, description];
+  late final GeneratedColumn<int> artworkId = GeneratedColumn<int>(
+      'artwork_id', aliasedName, false,
+      check: () => ComparableExpr(artworkId).isBiggerThanValue(-1),
+      type: DriftSqlType.int,
+      requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, name, description, price, stock, sku, artworkId];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'product';
+  static const String $name = 'products';
   @override
-  VerificationContext validateIntegrity(Insertable<products> instance,
+  VerificationContext validateIntegrity(Insertable<ProductData> instance,
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
@@ -63,6 +80,14 @@ class $ProductTable extends Product with TableInfo<$ProductTable, products> {
           _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
     } else if (isInserting) {
       context.missing(_nameMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    } else if (isInserting) {
+      context.missing(_descriptionMeta);
     }
     if (data.containsKey('price')) {
       context.handle(
@@ -76,13 +101,17 @@ class $ProductTable extends Product with TableInfo<$ProductTable, products> {
     } else if (isInserting) {
       context.missing(_stockMeta);
     }
-    if (data.containsKey('description')) {
+    if (data.containsKey('sku')) {
       context.handle(
-          _descriptionMeta,
-          description.isAcceptableOrUnknown(
-              data['description']!, _descriptionMeta));
+          _skuMeta, sku.isAcceptableOrUnknown(data['sku']!, _skuMeta));
     } else if (isInserting) {
-      context.missing(_descriptionMeta);
+      context.missing(_skuMeta);
+    }
+    if (data.containsKey('artwork_id')) {
+      context.handle(_artworkIdMeta,
+          artworkId.isAcceptableOrUnknown(data['artwork_id']!, _artworkIdMeta));
+    } else if (isInserting) {
+      context.missing(_artworkIdMeta);
     }
     return context;
   }
@@ -90,19 +119,23 @@ class $ProductTable extends Product with TableInfo<$ProductTable, products> {
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  products map(Map<String, dynamic> data, {String? tablePrefix}) {
+  ProductData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return products(
+    return ProductData(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       name: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description'])!,
       price: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}price'])!,
       stock: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}stock'])!,
-      description: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}description'])!,
+      sku: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}sku'])!,
+      artworkId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}artwork_id'])!,
     );
   }
 
@@ -112,26 +145,32 @@ class $ProductTable extends Product with TableInfo<$ProductTable, products> {
   }
 }
 
-class products extends DataClass implements Insertable<products> {
+class ProductData extends DataClass implements Insertable<ProductData> {
   final int id;
   final String name;
+  final String description;
   final double price;
   final int stock;
-  final String description;
-  const products(
+  final String sku;
+  final int artworkId;
+  const ProductData(
       {required this.id,
       required this.name,
+      required this.description,
       required this.price,
       required this.stock,
-      required this.description});
+      required this.sku,
+      required this.artworkId});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['name'] = Variable<String>(name);
+    map['description'] = Variable<String>(description);
     map['price'] = Variable<double>(price);
     map['stock'] = Variable<int>(stock);
-    map['description'] = Variable<String>(description);
+    map['sku'] = Variable<String>(sku);
+    map['artwork_id'] = Variable<int>(artworkId);
     return map;
   }
 
@@ -139,21 +178,25 @@ class products extends DataClass implements Insertable<products> {
     return ProductCompanion(
       id: Value(id),
       name: Value(name),
+      description: Value(description),
       price: Value(price),
       stock: Value(stock),
-      description: Value(description),
+      sku: Value(sku),
+      artworkId: Value(artworkId),
     );
   }
 
-  factory products.fromJson(Map<String, dynamic> json,
+  factory ProductData.fromJson(Map<String, dynamic> json,
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return products(
+    return ProductData(
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
+      description: serializer.fromJson<String>(json['description']),
       price: serializer.fromJson<double>(json['price']),
       stock: serializer.fromJson<int>(json['stock']),
-      description: serializer.fromJson<String>(json['description']),
+      sku: serializer.fromJson<String>(json['sku']),
+      artworkId: serializer.fromJson<int>(json['artworkId']),
     );
   }
   @override
@@ -162,112 +205,141 @@ class products extends DataClass implements Insertable<products> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
+      'description': serializer.toJson<String>(description),
       'price': serializer.toJson<double>(price),
       'stock': serializer.toJson<int>(stock),
-      'description': serializer.toJson<String>(description),
+      'sku': serializer.toJson<String>(sku),
+      'artworkId': serializer.toJson<int>(artworkId),
     };
   }
 
-  products copyWith(
+  ProductData copyWith(
           {int? id,
           String? name,
+          String? description,
           double? price,
           int? stock,
-          String? description}) =>
-      products(
+          String? sku,
+          int? artworkId}) =>
+      ProductData(
         id: id ?? this.id,
         name: name ?? this.name,
+        description: description ?? this.description,
         price: price ?? this.price,
         stock: stock ?? this.stock,
-        description: description ?? this.description,
+        sku: sku ?? this.sku,
+        artworkId: artworkId ?? this.artworkId,
       );
-  products copyWithCompanion(ProductCompanion data) {
-    return products(
+  ProductData copyWithCompanion(ProductCompanion data) {
+    return ProductData(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
-      price: data.price.present ? data.price.value : this.price,
-      stock: data.stock.present ? data.stock.value : this.stock,
       description:
           data.description.present ? data.description.value : this.description,
+      price: data.price.present ? data.price.value : this.price,
+      stock: data.stock.present ? data.stock.value : this.stock,
+      sku: data.sku.present ? data.sku.value : this.sku,
+      artworkId: data.artworkId.present ? data.artworkId.value : this.artworkId,
     );
   }
 
   @override
   String toString() {
-    return (StringBuffer('products(')
+    return (StringBuffer('ProductData(')
           ..write('id: $id, ')
           ..write('name: $name, ')
+          ..write('description: $description, ')
           ..write('price: $price, ')
           ..write('stock: $stock, ')
-          ..write('description: $description')
+          ..write('sku: $sku, ')
+          ..write('artworkId: $artworkId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, price, stock, description);
+  int get hashCode =>
+      Object.hash(id, name, description, price, stock, sku, artworkId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is products &&
+      (other is ProductData &&
           other.id == this.id &&
           other.name == this.name &&
+          other.description == this.description &&
           other.price == this.price &&
           other.stock == this.stock &&
-          other.description == this.description);
+          other.sku == this.sku &&
+          other.artworkId == this.artworkId);
 }
 
-class ProductCompanion extends UpdateCompanion<products> {
+class ProductCompanion extends UpdateCompanion<ProductData> {
   final Value<int> id;
   final Value<String> name;
+  final Value<String> description;
   final Value<double> price;
   final Value<int> stock;
-  final Value<String> description;
+  final Value<String> sku;
+  final Value<int> artworkId;
   const ProductCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
+    this.description = const Value.absent(),
     this.price = const Value.absent(),
     this.stock = const Value.absent(),
-    this.description = const Value.absent(),
+    this.sku = const Value.absent(),
+    this.artworkId = const Value.absent(),
   });
   ProductCompanion.insert({
     this.id = const Value.absent(),
     required String name,
+    required String description,
     required double price,
     required int stock,
-    required String description,
+    required String sku,
+    required int artworkId,
   })  : name = Value(name),
+        description = Value(description),
         price = Value(price),
         stock = Value(stock),
-        description = Value(description);
-  static Insertable<products> custom({
+        sku = Value(sku),
+        artworkId = Value(artworkId);
+  static Insertable<ProductData> custom({
     Expression<int>? id,
     Expression<String>? name,
+    Expression<String>? description,
     Expression<double>? price,
     Expression<int>? stock,
-    Expression<String>? description,
+    Expression<String>? sku,
+    Expression<int>? artworkId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
+      if (description != null) 'description': description,
       if (price != null) 'price': price,
       if (stock != null) 'stock': stock,
-      if (description != null) 'description': description,
+      if (sku != null) 'sku': sku,
+      if (artworkId != null) 'artwork_id': artworkId,
     });
   }
 
   ProductCompanion copyWith(
       {Value<int>? id,
       Value<String>? name,
+      Value<String>? description,
       Value<double>? price,
       Value<int>? stock,
-      Value<String>? description}) {
+      Value<String>? sku,
+      Value<int>? artworkId}) {
     return ProductCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
+      description: description ?? this.description,
       price: price ?? this.price,
       stock: stock ?? this.stock,
-      description: description ?? this.description,
+      sku: sku ?? this.sku,
+      artworkId: artworkId ?? this.artworkId,
     );
   }
 
@@ -280,14 +352,20 @@ class ProductCompanion extends UpdateCompanion<products> {
     if (name.present) {
       map['name'] = Variable<String>(name.value);
     }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
     if (price.present) {
       map['price'] = Variable<double>(price.value);
     }
     if (stock.present) {
       map['stock'] = Variable<int>(stock.value);
     }
-    if (description.present) {
-      map['description'] = Variable<String>(description.value);
+    if (sku.present) {
+      map['sku'] = Variable<String>(sku.value);
+    }
+    if (artworkId.present) {
+      map['artwork_id'] = Variable<int>(artworkId.value);
     }
     return map;
   }
@@ -297,15 +375,17 @@ class ProductCompanion extends UpdateCompanion<products> {
     return (StringBuffer('ProductCompanion(')
           ..write('id: $id, ')
           ..write('name: $name, ')
+          ..write('description: $description, ')
           ..write('price: $price, ')
           ..write('stock: $stock, ')
-          ..write('description: $description')
+          ..write('sku: $sku, ')
+          ..write('artworkId: $artworkId')
           ..write(')'))
         .toString();
   }
 }
 
-class $InvoiceTable extends Invoice with TableInfo<$InvoiceTable, invoices> {
+class $InvoiceTable extends Invoice with TableInfo<$InvoiceTable, InvoiceData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -338,6 +418,11 @@ class $InvoiceTable extends Invoice with TableInfo<$InvoiceTable, invoices> {
   @override
   late final GeneratedColumn<double> subtotal = GeneratedColumn<double>(
       'subtotal', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _totalMeta = const VerificationMeta('total');
+  @override
+  late final GeneratedColumn<double> total = GeneratedColumn<double>(
+      'total', aliasedName, false,
       type: DriftSqlType.double, requiredDuringInsert: true);
   static const VerificationMeta _discount_typeMeta =
       const VerificationMeta('discount_type');
@@ -392,6 +477,7 @@ class $InvoiceTable extends Invoice with TableInfo<$InvoiceTable, invoices> {
         customer_id,
         timestamp,
         subtotal,
+        total,
         discount_type,
         discount_amount,
         tendered,
@@ -404,9 +490,9 @@ class $InvoiceTable extends Invoice with TableInfo<$InvoiceTable, invoices> {
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'invoice';
+  static const String $name = 'invoices';
   @override
-  VerificationContext validateIntegrity(Insertable<invoices> instance,
+  VerificationContext validateIntegrity(Insertable<InvoiceData> instance,
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
@@ -432,6 +518,12 @@ class $InvoiceTable extends Invoice with TableInfo<$InvoiceTable, invoices> {
           subtotal.isAcceptableOrUnknown(data['subtotal']!, _subtotalMeta));
     } else if (isInserting) {
       context.missing(_subtotalMeta);
+    }
+    if (data.containsKey('total')) {
+      context.handle(
+          _totalMeta, total.isAcceptableOrUnknown(data['total']!, _totalMeta));
+    } else if (isInserting) {
+      context.missing(_totalMeta);
     }
     if (data.containsKey('discount_type')) {
       context.handle(
@@ -489,9 +581,9 @@ class $InvoiceTable extends Invoice with TableInfo<$InvoiceTable, invoices> {
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  invoices map(Map<String, dynamic> data, {String? tablePrefix}) {
+  InvoiceData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return invoices(
+    return InvoiceData(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       customer_id: attachedDatabase.typeMapping
@@ -500,6 +592,8 @@ class $InvoiceTable extends Invoice with TableInfo<$InvoiceTable, invoices> {
           .read(DriftSqlType.dateTime, data['${effectivePrefix}timestamp'])!,
       subtotal: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}subtotal'])!,
+      total: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}total'])!,
       discount_type: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}discount_type'])!,
       discount_amount: attachedDatabase.typeMapping.read(
@@ -523,11 +617,12 @@ class $InvoiceTable extends Invoice with TableInfo<$InvoiceTable, invoices> {
   }
 }
 
-class invoices extends DataClass implements Insertable<invoices> {
+class InvoiceData extends DataClass implements Insertable<InvoiceData> {
   final int id;
   final int customer_id;
   final DateTime timestamp;
   final double subtotal;
+  final double total;
   final String discount_type;
   final double discount_amount;
   final double tendered;
@@ -535,11 +630,12 @@ class invoices extends DataClass implements Insertable<invoices> {
   final String payment_method;
   final String status;
   final String goods_status;
-  const invoices(
+  const InvoiceData(
       {required this.id,
       required this.customer_id,
       required this.timestamp,
       required this.subtotal,
+      required this.total,
       required this.discount_type,
       required this.discount_amount,
       required this.tendered,
@@ -554,6 +650,7 @@ class invoices extends DataClass implements Insertable<invoices> {
     map['customer_id'] = Variable<int>(customer_id);
     map['timestamp'] = Variable<DateTime>(timestamp);
     map['subtotal'] = Variable<double>(subtotal);
+    map['total'] = Variable<double>(total);
     map['discount_type'] = Variable<String>(discount_type);
     map['discount_amount'] = Variable<double>(discount_amount);
     map['tendered'] = Variable<double>(tendered);
@@ -570,6 +667,7 @@ class invoices extends DataClass implements Insertable<invoices> {
       customer_id: Value(customer_id),
       timestamp: Value(timestamp),
       subtotal: Value(subtotal),
+      total: Value(total),
       discount_type: Value(discount_type),
       discount_amount: Value(discount_amount),
       tendered: Value(tendered),
@@ -580,14 +678,15 @@ class invoices extends DataClass implements Insertable<invoices> {
     );
   }
 
-  factory invoices.fromJson(Map<String, dynamic> json,
+  factory InvoiceData.fromJson(Map<String, dynamic> json,
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return invoices(
+    return InvoiceData(
       id: serializer.fromJson<int>(json['id']),
       customer_id: serializer.fromJson<int>(json['customer_id']),
       timestamp: serializer.fromJson<DateTime>(json['timestamp']),
       subtotal: serializer.fromJson<double>(json['subtotal']),
+      total: serializer.fromJson<double>(json['total']),
       discount_type: serializer.fromJson<String>(json['discount_type']),
       discount_amount: serializer.fromJson<double>(json['discount_amount']),
       tendered: serializer.fromJson<double>(json['tendered']),
@@ -605,6 +704,7 @@ class invoices extends DataClass implements Insertable<invoices> {
       'customer_id': serializer.toJson<int>(customer_id),
       'timestamp': serializer.toJson<DateTime>(timestamp),
       'subtotal': serializer.toJson<double>(subtotal),
+      'total': serializer.toJson<double>(total),
       'discount_type': serializer.toJson<String>(discount_type),
       'discount_amount': serializer.toJson<double>(discount_amount),
       'tendered': serializer.toJson<double>(tendered),
@@ -615,11 +715,12 @@ class invoices extends DataClass implements Insertable<invoices> {
     };
   }
 
-  invoices copyWith(
+  InvoiceData copyWith(
           {int? id,
           int? customer_id,
           DateTime? timestamp,
           double? subtotal,
+          double? total,
           String? discount_type,
           double? discount_amount,
           double? tendered,
@@ -627,11 +728,12 @@ class invoices extends DataClass implements Insertable<invoices> {
           String? payment_method,
           String? status,
           String? goods_status}) =>
-      invoices(
+      InvoiceData(
         id: id ?? this.id,
         customer_id: customer_id ?? this.customer_id,
         timestamp: timestamp ?? this.timestamp,
         subtotal: subtotal ?? this.subtotal,
+        total: total ?? this.total,
         discount_type: discount_type ?? this.discount_type,
         discount_amount: discount_amount ?? this.discount_amount,
         tendered: tendered ?? this.tendered,
@@ -640,13 +742,14 @@ class invoices extends DataClass implements Insertable<invoices> {
         status: status ?? this.status,
         goods_status: goods_status ?? this.goods_status,
       );
-  invoices copyWithCompanion(InvoiceCompanion data) {
-    return invoices(
+  InvoiceData copyWithCompanion(InvoiceCompanion data) {
+    return InvoiceData(
       id: data.id.present ? data.id.value : this.id,
       customer_id:
           data.customer_id.present ? data.customer_id.value : this.customer_id,
       timestamp: data.timestamp.present ? data.timestamp.value : this.timestamp,
       subtotal: data.subtotal.present ? data.subtotal.value : this.subtotal,
+      total: data.total.present ? data.total.value : this.total,
       discount_type: data.discount_type.present
           ? data.discount_type.value
           : this.discount_type,
@@ -667,11 +770,12 @@ class invoices extends DataClass implements Insertable<invoices> {
 
   @override
   String toString() {
-    return (StringBuffer('invoices(')
+    return (StringBuffer('InvoiceData(')
           ..write('id: $id, ')
           ..write('customer_id: $customer_id, ')
           ..write('timestamp: $timestamp, ')
           ..write('subtotal: $subtotal, ')
+          ..write('total: $total, ')
           ..write('discount_type: $discount_type, ')
           ..write('discount_amount: $discount_amount, ')
           ..write('tendered: $tendered, ')
@@ -689,6 +793,7 @@ class invoices extends DataClass implements Insertable<invoices> {
       customer_id,
       timestamp,
       subtotal,
+      total,
       discount_type,
       discount_amount,
       tendered,
@@ -699,11 +804,12 @@ class invoices extends DataClass implements Insertable<invoices> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is invoices &&
+      (other is InvoiceData &&
           other.id == this.id &&
           other.customer_id == this.customer_id &&
           other.timestamp == this.timestamp &&
           other.subtotal == this.subtotal &&
+          other.total == this.total &&
           other.discount_type == this.discount_type &&
           other.discount_amount == this.discount_amount &&
           other.tendered == this.tendered &&
@@ -713,11 +819,12 @@ class invoices extends DataClass implements Insertable<invoices> {
           other.goods_status == this.goods_status);
 }
 
-class InvoiceCompanion extends UpdateCompanion<invoices> {
+class InvoiceCompanion extends UpdateCompanion<InvoiceData> {
   final Value<int> id;
   final Value<int> customer_id;
   final Value<DateTime> timestamp;
   final Value<double> subtotal;
+  final Value<double> total;
   final Value<String> discount_type;
   final Value<double> discount_amount;
   final Value<double> tendered;
@@ -730,6 +837,7 @@ class InvoiceCompanion extends UpdateCompanion<invoices> {
     this.customer_id = const Value.absent(),
     this.timestamp = const Value.absent(),
     this.subtotal = const Value.absent(),
+    this.total = const Value.absent(),
     this.discount_type = const Value.absent(),
     this.discount_amount = const Value.absent(),
     this.tendered = const Value.absent(),
@@ -743,6 +851,7 @@ class InvoiceCompanion extends UpdateCompanion<invoices> {
     required int customer_id,
     required DateTime timestamp,
     required double subtotal,
+    required double total,
     required String discount_type,
     required double discount_amount,
     required double tendered,
@@ -753,6 +862,7 @@ class InvoiceCompanion extends UpdateCompanion<invoices> {
   })  : customer_id = Value(customer_id),
         timestamp = Value(timestamp),
         subtotal = Value(subtotal),
+        total = Value(total),
         discount_type = Value(discount_type),
         discount_amount = Value(discount_amount),
         tendered = Value(tendered),
@@ -760,11 +870,12 @@ class InvoiceCompanion extends UpdateCompanion<invoices> {
         payment_method = Value(payment_method),
         status = Value(status),
         goods_status = Value(goods_status);
-  static Insertable<invoices> custom({
+  static Insertable<InvoiceData> custom({
     Expression<int>? id,
     Expression<int>? customer_id,
     Expression<DateTime>? timestamp,
     Expression<double>? subtotal,
+    Expression<double>? total,
     Expression<String>? discount_type,
     Expression<double>? discount_amount,
     Expression<double>? tendered,
@@ -778,6 +889,7 @@ class InvoiceCompanion extends UpdateCompanion<invoices> {
       if (customer_id != null) 'customer_id': customer_id,
       if (timestamp != null) 'timestamp': timestamp,
       if (subtotal != null) 'subtotal': subtotal,
+      if (total != null) 'total': total,
       if (discount_type != null) 'discount_type': discount_type,
       if (discount_amount != null) 'discount_amount': discount_amount,
       if (tendered != null) 'tendered': tendered,
@@ -793,6 +905,7 @@ class InvoiceCompanion extends UpdateCompanion<invoices> {
       Value<int>? customer_id,
       Value<DateTime>? timestamp,
       Value<double>? subtotal,
+      Value<double>? total,
       Value<String>? discount_type,
       Value<double>? discount_amount,
       Value<double>? tendered,
@@ -805,6 +918,7 @@ class InvoiceCompanion extends UpdateCompanion<invoices> {
       customer_id: customer_id ?? this.customer_id,
       timestamp: timestamp ?? this.timestamp,
       subtotal: subtotal ?? this.subtotal,
+      total: total ?? this.total,
       discount_type: discount_type ?? this.discount_type,
       discount_amount: discount_amount ?? this.discount_amount,
       tendered: tendered ?? this.tendered,
@@ -829,6 +943,9 @@ class InvoiceCompanion extends UpdateCompanion<invoices> {
     }
     if (subtotal.present) {
       map['subtotal'] = Variable<double>(subtotal.value);
+    }
+    if (total.present) {
+      map['total'] = Variable<double>(total.value);
     }
     if (discount_type.present) {
       map['discount_type'] = Variable<String>(discount_type.value);
@@ -861,6 +978,7 @@ class InvoiceCompanion extends UpdateCompanion<invoices> {
           ..write('customer_id: $customer_id, ')
           ..write('timestamp: $timestamp, ')
           ..write('subtotal: $subtotal, ')
+          ..write('total: $total, ')
           ..write('discount_type: $discount_type, ')
           ..write('discount_amount: $discount_amount, ')
           ..write('tendered: $tendered, ')
@@ -874,7 +992,7 @@ class InvoiceCompanion extends UpdateCompanion<invoices> {
 }
 
 class $InvoiceProductTable extends InvoiceProduct
-    with TableInfo<$InvoiceProductTable, invoice_products> {
+    with TableInfo<$InvoiceProductTable, InvoiceProductData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -924,7 +1042,7 @@ class $InvoiceProductTable extends InvoiceProduct
   String get actualTableName => $name;
   static const String $name = 'invoice_product';
   @override
-  VerificationContext validateIntegrity(Insertable<invoice_products> instance,
+  VerificationContext validateIntegrity(Insertable<InvoiceProductData> instance,
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
@@ -965,9 +1083,9 @@ class $InvoiceProductTable extends InvoiceProduct
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  invoice_products map(Map<String, dynamic> data, {String? tablePrefix}) {
+  InvoiceProductData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return invoice_products(
+    return InvoiceProductData(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       invoice_id: attachedDatabase.typeMapping
@@ -987,14 +1105,14 @@ class $InvoiceProductTable extends InvoiceProduct
   }
 }
 
-class invoice_products extends DataClass
-    implements Insertable<invoice_products> {
+class InvoiceProductData extends DataClass
+    implements Insertable<InvoiceProductData> {
   final int id;
   final int invoice_id;
   final int product_id;
   final int quantity;
   final double price;
-  const invoice_products(
+  const InvoiceProductData(
       {required this.id,
       required this.invoice_id,
       required this.product_id,
@@ -1021,10 +1139,10 @@ class invoice_products extends DataClass
     );
   }
 
-  factory invoice_products.fromJson(Map<String, dynamic> json,
+  factory InvoiceProductData.fromJson(Map<String, dynamic> json,
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return invoice_products(
+    return InvoiceProductData(
       id: serializer.fromJson<int>(json['id']),
       invoice_id: serializer.fromJson<int>(json['invoice_id']),
       product_id: serializer.fromJson<int>(json['product_id']),
@@ -1044,21 +1162,21 @@ class invoice_products extends DataClass
     };
   }
 
-  invoice_products copyWith(
+  InvoiceProductData copyWith(
           {int? id,
           int? invoice_id,
           int? product_id,
           int? quantity,
           double? price}) =>
-      invoice_products(
+      InvoiceProductData(
         id: id ?? this.id,
         invoice_id: invoice_id ?? this.invoice_id,
         product_id: product_id ?? this.product_id,
         quantity: quantity ?? this.quantity,
         price: price ?? this.price,
       );
-  invoice_products copyWithCompanion(InvoiceProductCompanion data) {
-    return invoice_products(
+  InvoiceProductData copyWithCompanion(InvoiceProductCompanion data) {
+    return InvoiceProductData(
       id: data.id.present ? data.id.value : this.id,
       invoice_id:
           data.invoice_id.present ? data.invoice_id.value : this.invoice_id,
@@ -1071,7 +1189,7 @@ class invoice_products extends DataClass
 
   @override
   String toString() {
-    return (StringBuffer('invoice_products(')
+    return (StringBuffer('InvoiceProductData(')
           ..write('id: $id, ')
           ..write('invoice_id: $invoice_id, ')
           ..write('product_id: $product_id, ')
@@ -1086,7 +1204,7 @@ class invoice_products extends DataClass
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is invoice_products &&
+      (other is InvoiceProductData &&
           other.id == this.id &&
           other.invoice_id == this.invoice_id &&
           other.product_id == this.product_id &&
@@ -1094,7 +1212,7 @@ class invoice_products extends DataClass
           other.price == this.price);
 }
 
-class InvoiceProductCompanion extends UpdateCompanion<invoice_products> {
+class InvoiceProductCompanion extends UpdateCompanion<InvoiceProductData> {
   final Value<int> id;
   final Value<int> invoice_id;
   final Value<int> product_id;
@@ -1117,7 +1235,7 @@ class InvoiceProductCompanion extends UpdateCompanion<invoice_products> {
         product_id = Value(product_id),
         quantity = Value(quantity),
         price = Value(price);
-  static Insertable<invoice_products> custom({
+  static Insertable<InvoiceProductData> custom({
     Expression<int>? id,
     Expression<int>? invoice_id,
     Expression<int>? product_id,
@@ -1182,7 +1300,7 @@ class InvoiceProductCompanion extends UpdateCompanion<invoice_products> {
   }
 }
 
-class $RestockTable extends Restock with TableInfo<$RestockTable, restocks> {
+class $RestockTable extends Restock with TableInfo<$RestockTable, RestockData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -1231,9 +1349,9 @@ class $RestockTable extends Restock with TableInfo<$RestockTable, restocks> {
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'restock';
+  static const String $name = 'restocks';
   @override
-  VerificationContext validateIntegrity(Insertable<restocks> instance,
+  VerificationContext validateIntegrity(Insertable<RestockData> instance,
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
@@ -1274,9 +1392,9 @@ class $RestockTable extends Restock with TableInfo<$RestockTable, restocks> {
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  restocks map(Map<String, dynamic> data, {String? tablePrefix}) {
+  RestockData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return restocks(
+    return RestockData(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       product_id: attachedDatabase.typeMapping
@@ -1296,13 +1414,13 @@ class $RestockTable extends Restock with TableInfo<$RestockTable, restocks> {
   }
 }
 
-class restocks extends DataClass implements Insertable<restocks> {
+class RestockData extends DataClass implements Insertable<RestockData> {
   final int id;
   final int product_id;
   final int supplier_id;
   final int quantity;
   final DateTime timestamp;
-  const restocks(
+  const RestockData(
       {required this.id,
       required this.product_id,
       required this.supplier_id,
@@ -1329,10 +1447,10 @@ class restocks extends DataClass implements Insertable<restocks> {
     );
   }
 
-  factory restocks.fromJson(Map<String, dynamic> json,
+  factory RestockData.fromJson(Map<String, dynamic> json,
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return restocks(
+    return RestockData(
       id: serializer.fromJson<int>(json['id']),
       product_id: serializer.fromJson<int>(json['product_id']),
       supplier_id: serializer.fromJson<int>(json['supplier_id']),
@@ -1352,21 +1470,21 @@ class restocks extends DataClass implements Insertable<restocks> {
     };
   }
 
-  restocks copyWith(
+  RestockData copyWith(
           {int? id,
           int? product_id,
           int? supplier_id,
           int? quantity,
           DateTime? timestamp}) =>
-      restocks(
+      RestockData(
         id: id ?? this.id,
         product_id: product_id ?? this.product_id,
         supplier_id: supplier_id ?? this.supplier_id,
         quantity: quantity ?? this.quantity,
         timestamp: timestamp ?? this.timestamp,
       );
-  restocks copyWithCompanion(RestockCompanion data) {
-    return restocks(
+  RestockData copyWithCompanion(RestockCompanion data) {
+    return RestockData(
       id: data.id.present ? data.id.value : this.id,
       product_id:
           data.product_id.present ? data.product_id.value : this.product_id,
@@ -1379,7 +1497,7 @@ class restocks extends DataClass implements Insertable<restocks> {
 
   @override
   String toString() {
-    return (StringBuffer('restocks(')
+    return (StringBuffer('RestockData(')
           ..write('id: $id, ')
           ..write('product_id: $product_id, ')
           ..write('supplier_id: $supplier_id, ')
@@ -1395,7 +1513,7 @@ class restocks extends DataClass implements Insertable<restocks> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is restocks &&
+      (other is RestockData &&
           other.id == this.id &&
           other.product_id == this.product_id &&
           other.supplier_id == this.supplier_id &&
@@ -1403,7 +1521,7 @@ class restocks extends DataClass implements Insertable<restocks> {
           other.timestamp == this.timestamp);
 }
 
-class RestockCompanion extends UpdateCompanion<restocks> {
+class RestockCompanion extends UpdateCompanion<RestockData> {
   final Value<int> id;
   final Value<int> product_id;
   final Value<int> supplier_id;
@@ -1426,7 +1544,7 @@ class RestockCompanion extends UpdateCompanion<restocks> {
         supplier_id = Value(supplier_id),
         quantity = Value(quantity),
         timestamp = Value(timestamp);
-  static Insertable<restocks> custom({
+  static Insertable<RestockData> custom({
     Expression<int>? id,
     Expression<int>? product_id,
     Expression<int>? supplier_id,
@@ -1492,7 +1610,7 @@ class RestockCompanion extends UpdateCompanion<restocks> {
 }
 
 class $CustomerTable extends Customer
-    with TableInfo<$CustomerTable, customers> {
+    with TableInfo<$CustomerTable, CustomerData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -1535,9 +1653,9 @@ class $CustomerTable extends Customer
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'customer';
+  static const String $name = 'customers';
   @override
-  VerificationContext validateIntegrity(Insertable<customers> instance,
+  VerificationContext validateIntegrity(Insertable<CustomerData> instance,
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
@@ -1576,9 +1694,9 @@ class $CustomerTable extends Customer
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  customers map(Map<String, dynamic> data, {String? tablePrefix}) {
+  CustomerData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return customers(
+    return CustomerData(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       name: attachedDatabase.typeMapping
@@ -1598,13 +1716,13 @@ class $CustomerTable extends Customer
   }
 }
 
-class customers extends DataClass implements Insertable<customers> {
+class CustomerData extends DataClass implements Insertable<CustomerData> {
   final int id;
   final String name;
   final String email;
   final String phone_number;
   final String address;
-  const customers(
+  const CustomerData(
       {required this.id,
       required this.name,
       required this.email,
@@ -1631,10 +1749,10 @@ class customers extends DataClass implements Insertable<customers> {
     );
   }
 
-  factory customers.fromJson(Map<String, dynamic> json,
+  factory CustomerData.fromJson(Map<String, dynamic> json,
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return customers(
+    return CustomerData(
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       email: serializer.fromJson<String>(json['email']),
@@ -1654,21 +1772,21 @@ class customers extends DataClass implements Insertable<customers> {
     };
   }
 
-  customers copyWith(
+  CustomerData copyWith(
           {int? id,
           String? name,
           String? email,
           String? phone_number,
           String? address}) =>
-      customers(
+      CustomerData(
         id: id ?? this.id,
         name: name ?? this.name,
         email: email ?? this.email,
         phone_number: phone_number ?? this.phone_number,
         address: address ?? this.address,
       );
-  customers copyWithCompanion(CustomerCompanion data) {
-    return customers(
+  CustomerData copyWithCompanion(CustomerCompanion data) {
+    return CustomerData(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       email: data.email.present ? data.email.value : this.email,
@@ -1681,7 +1799,7 @@ class customers extends DataClass implements Insertable<customers> {
 
   @override
   String toString() {
-    return (StringBuffer('customers(')
+    return (StringBuffer('CustomerData(')
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('email: $email, ')
@@ -1696,7 +1814,7 @@ class customers extends DataClass implements Insertable<customers> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is customers &&
+      (other is CustomerData &&
           other.id == this.id &&
           other.name == this.name &&
           other.email == this.email &&
@@ -1704,7 +1822,7 @@ class customers extends DataClass implements Insertable<customers> {
           other.address == this.address);
 }
 
-class CustomerCompanion extends UpdateCompanion<customers> {
+class CustomerCompanion extends UpdateCompanion<CustomerData> {
   final Value<int> id;
   final Value<String> name;
   final Value<String> email;
@@ -1727,7 +1845,7 @@ class CustomerCompanion extends UpdateCompanion<customers> {
         email = Value(email),
         phone_number = Value(phone_number),
         address = Value(address);
-  static Insertable<customers> custom({
+  static Insertable<CustomerData> custom({
     Expression<int>? id,
     Expression<String>? name,
     Expression<String>? email,
@@ -1793,7 +1911,7 @@ class CustomerCompanion extends UpdateCompanion<customers> {
 }
 
 class $SupplierTable extends Supplier
-    with TableInfo<$SupplierTable, suppliers> {
+    with TableInfo<$SupplierTable, SupplierData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -1818,9 +1936,9 @@ class $SupplierTable extends Supplier
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'supplier';
+  static const String $name = 'suppliers';
   @override
-  VerificationContext validateIntegrity(Insertable<suppliers> instance,
+  VerificationContext validateIntegrity(Insertable<SupplierData> instance,
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
@@ -1839,9 +1957,9 @@ class $SupplierTable extends Supplier
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  suppliers map(Map<String, dynamic> data, {String? tablePrefix}) {
+  SupplierData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return suppliers(
+    return SupplierData(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       name: attachedDatabase.typeMapping
@@ -1855,10 +1973,10 @@ class $SupplierTable extends Supplier
   }
 }
 
-class suppliers extends DataClass implements Insertable<suppliers> {
+class SupplierData extends DataClass implements Insertable<SupplierData> {
   final int id;
   final String name;
-  const suppliers({required this.id, required this.name});
+  const SupplierData({required this.id, required this.name});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1874,10 +1992,10 @@ class suppliers extends DataClass implements Insertable<suppliers> {
     );
   }
 
-  factory suppliers.fromJson(Map<String, dynamic> json,
+  factory SupplierData.fromJson(Map<String, dynamic> json,
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return suppliers(
+    return SupplierData(
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
     );
@@ -1891,12 +2009,12 @@ class suppliers extends DataClass implements Insertable<suppliers> {
     };
   }
 
-  suppliers copyWith({int? id, String? name}) => suppliers(
+  SupplierData copyWith({int? id, String? name}) => SupplierData(
         id: id ?? this.id,
         name: name ?? this.name,
       );
-  suppliers copyWithCompanion(SupplierCompanion data) {
-    return suppliers(
+  SupplierData copyWithCompanion(SupplierCompanion data) {
+    return SupplierData(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
     );
@@ -1904,7 +2022,7 @@ class suppliers extends DataClass implements Insertable<suppliers> {
 
   @override
   String toString() {
-    return (StringBuffer('suppliers(')
+    return (StringBuffer('SupplierData(')
           ..write('id: $id, ')
           ..write('name: $name')
           ..write(')'))
@@ -1916,10 +2034,10 @@ class suppliers extends DataClass implements Insertable<suppliers> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is suppliers && other.id == this.id && other.name == this.name);
+      (other is SupplierData && other.id == this.id && other.name == this.name);
 }
 
-class SupplierCompanion extends UpdateCompanion<suppliers> {
+class SupplierCompanion extends UpdateCompanion<SupplierData> {
   final Value<int> id;
   final Value<String> name;
   const SupplierCompanion({
@@ -1930,7 +2048,7 @@ class SupplierCompanion extends UpdateCompanion<suppliers> {
     this.id = const Value.absent(),
     required String name,
   }) : name = Value(name);
-  static Insertable<suppliers> custom({
+  static Insertable<SupplierData> custom({
     Expression<int>? id,
     Expression<String>? name,
   }) {
@@ -1970,7 +2088,7 @@ class SupplierCompanion extends UpdateCompanion<suppliers> {
 }
 
 class $InventoryAdjustmentTable extends InventoryAdjustment
-    with TableInfo<$InventoryAdjustmentTable, inventory_adjustments> {
+    with TableInfo<$InventoryAdjustmentTable, InventoryAdjustmentData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -2016,10 +2134,10 @@ class $InventoryAdjustmentTable extends InventoryAdjustment
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'inventory_adjustment';
+  static const String $name = 'inventory_adjustments';
   @override
   VerificationContext validateIntegrity(
-      Insertable<inventory_adjustments> instance,
+      Insertable<InventoryAdjustmentData> instance,
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
@@ -2058,9 +2176,10 @@ class $InventoryAdjustmentTable extends InventoryAdjustment
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  inventory_adjustments map(Map<String, dynamic> data, {String? tablePrefix}) {
+  InventoryAdjustmentData map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return inventory_adjustments(
+    return InventoryAdjustmentData(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       product_id: attachedDatabase.typeMapping
@@ -2080,14 +2199,14 @@ class $InventoryAdjustmentTable extends InventoryAdjustment
   }
 }
 
-class inventory_adjustments extends DataClass
-    implements Insertable<inventory_adjustments> {
+class InventoryAdjustmentData extends DataClass
+    implements Insertable<InventoryAdjustmentData> {
   final int id;
   final int product_id;
   final String type;
   final int quantity;
   final DateTime timestamp;
-  const inventory_adjustments(
+  const InventoryAdjustmentData(
       {required this.id,
       required this.product_id,
       required this.type,
@@ -2114,10 +2233,10 @@ class inventory_adjustments extends DataClass
     );
   }
 
-  factory inventory_adjustments.fromJson(Map<String, dynamic> json,
+  factory InventoryAdjustmentData.fromJson(Map<String, dynamic> json,
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return inventory_adjustments(
+    return InventoryAdjustmentData(
       id: serializer.fromJson<int>(json['id']),
       product_id: serializer.fromJson<int>(json['product_id']),
       type: serializer.fromJson<String>(json['type']),
@@ -2137,21 +2256,21 @@ class inventory_adjustments extends DataClass
     };
   }
 
-  inventory_adjustments copyWith(
+  InventoryAdjustmentData copyWith(
           {int? id,
           int? product_id,
           String? type,
           int? quantity,
           DateTime? timestamp}) =>
-      inventory_adjustments(
+      InventoryAdjustmentData(
         id: id ?? this.id,
         product_id: product_id ?? this.product_id,
         type: type ?? this.type,
         quantity: quantity ?? this.quantity,
         timestamp: timestamp ?? this.timestamp,
       );
-  inventory_adjustments copyWithCompanion(InventoryAdjustmentCompanion data) {
-    return inventory_adjustments(
+  InventoryAdjustmentData copyWithCompanion(InventoryAdjustmentCompanion data) {
+    return InventoryAdjustmentData(
       id: data.id.present ? data.id.value : this.id,
       product_id:
           data.product_id.present ? data.product_id.value : this.product_id,
@@ -2163,7 +2282,7 @@ class inventory_adjustments extends DataClass
 
   @override
   String toString() {
-    return (StringBuffer('inventory_adjustments(')
+    return (StringBuffer('InventoryAdjustmentData(')
           ..write('id: $id, ')
           ..write('product_id: $product_id, ')
           ..write('type: $type, ')
@@ -2178,7 +2297,7 @@ class inventory_adjustments extends DataClass
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is inventory_adjustments &&
+      (other is InventoryAdjustmentData &&
           other.id == this.id &&
           other.product_id == this.product_id &&
           other.type == this.type &&
@@ -2187,7 +2306,7 @@ class inventory_adjustments extends DataClass
 }
 
 class InventoryAdjustmentCompanion
-    extends UpdateCompanion<inventory_adjustments> {
+    extends UpdateCompanion<InventoryAdjustmentData> {
   final Value<int> id;
   final Value<int> product_id;
   final Value<String> type;
@@ -2210,7 +2329,7 @@ class InventoryAdjustmentCompanion
         type = Value(type),
         quantity = Value(quantity),
         timestamp = Value(timestamp);
-  static Insertable<inventory_adjustments> custom({
+  static Insertable<InventoryAdjustmentData> custom({
     Expression<int>? id,
     Expression<int>? product_id,
     Expression<String>? type,
@@ -2276,7 +2395,7 @@ class InventoryAdjustmentCompanion
 }
 
 class $ProductVariantTable extends ProductVariant
-    with TableInfo<$ProductVariantTable, product_variants> {
+    with TableInfo<$ProductVariantTable, ProductVariantData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -2322,9 +2441,9 @@ class $ProductVariantTable extends ProductVariant
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'product_variant';
+  static const String $name = 'product_variants';
   @override
-  VerificationContext validateIntegrity(Insertable<product_variants> instance,
+  VerificationContext validateIntegrity(Insertable<ProductVariantData> instance,
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
@@ -2367,9 +2486,9 @@ class $ProductVariantTable extends ProductVariant
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  product_variants map(Map<String, dynamic> data, {String? tablePrefix}) {
+  ProductVariantData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return product_variants(
+    return ProductVariantData(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       product_id: attachedDatabase.typeMapping
@@ -2389,14 +2508,14 @@ class $ProductVariantTable extends ProductVariant
   }
 }
 
-class product_variants extends DataClass
-    implements Insertable<product_variants> {
+class ProductVariantData extends DataClass
+    implements Insertable<ProductVariantData> {
   final int id;
   final int product_id;
   final String variant_type;
   final String name;
   final double price_adjustment;
-  const product_variants(
+  const ProductVariantData(
       {required this.id,
       required this.product_id,
       required this.variant_type,
@@ -2423,10 +2542,10 @@ class product_variants extends DataClass
     );
   }
 
-  factory product_variants.fromJson(Map<String, dynamic> json,
+  factory ProductVariantData.fromJson(Map<String, dynamic> json,
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return product_variants(
+    return ProductVariantData(
       id: serializer.fromJson<int>(json['id']),
       product_id: serializer.fromJson<int>(json['product_id']),
       variant_type: serializer.fromJson<String>(json['variant_type']),
@@ -2446,21 +2565,21 @@ class product_variants extends DataClass
     };
   }
 
-  product_variants copyWith(
+  ProductVariantData copyWith(
           {int? id,
           int? product_id,
           String? variant_type,
           String? name,
           double? price_adjustment}) =>
-      product_variants(
+      ProductVariantData(
         id: id ?? this.id,
         product_id: product_id ?? this.product_id,
         variant_type: variant_type ?? this.variant_type,
         name: name ?? this.name,
         price_adjustment: price_adjustment ?? this.price_adjustment,
       );
-  product_variants copyWithCompanion(ProductVariantCompanion data) {
-    return product_variants(
+  ProductVariantData copyWithCompanion(ProductVariantCompanion data) {
+    return ProductVariantData(
       id: data.id.present ? data.id.value : this.id,
       product_id:
           data.product_id.present ? data.product_id.value : this.product_id,
@@ -2476,7 +2595,7 @@ class product_variants extends DataClass
 
   @override
   String toString() {
-    return (StringBuffer('product_variants(')
+    return (StringBuffer('ProductVariantData(')
           ..write('id: $id, ')
           ..write('product_id: $product_id, ')
           ..write('variant_type: $variant_type, ')
@@ -2492,7 +2611,7 @@ class product_variants extends DataClass
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is product_variants &&
+      (other is ProductVariantData &&
           other.id == this.id &&
           other.product_id == this.product_id &&
           other.variant_type == this.variant_type &&
@@ -2500,7 +2619,7 @@ class product_variants extends DataClass
           other.price_adjustment == this.price_adjustment);
 }
 
-class ProductVariantCompanion extends UpdateCompanion<product_variants> {
+class ProductVariantCompanion extends UpdateCompanion<ProductVariantData> {
   final Value<int> id;
   final Value<int> product_id;
   final Value<String> variant_type;
@@ -2523,7 +2642,7 @@ class ProductVariantCompanion extends UpdateCompanion<product_variants> {
         variant_type = Value(variant_type),
         name = Value(name),
         price_adjustment = Value(price_adjustment);
-  static Insertable<product_variants> custom({
+  static Insertable<ProductVariantData> custom({
     Expression<int>? id,
     Expression<int>? product_id,
     Expression<String>? variant_type,
@@ -2589,7 +2708,7 @@ class ProductVariantCompanion extends UpdateCompanion<product_variants> {
 }
 
 class $AuditLogTable extends AuditLog
-    with TableInfo<$AuditLogTable, audit_logs> {
+    with TableInfo<$AuditLogTable, AuditLogData> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -2633,9 +2752,9 @@ class $AuditLogTable extends AuditLog
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
-  static const String $name = 'audit_log';
+  static const String $name = 'audit_logs';
   @override
-  VerificationContext validateIntegrity(Insertable<audit_logs> instance,
+  VerificationContext validateIntegrity(Insertable<AuditLogData> instance,
       {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
@@ -2676,9 +2795,9 @@ class $AuditLogTable extends AuditLog
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
-  audit_logs map(Map<String, dynamic> data, {String? tablePrefix}) {
+  AuditLogData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return audit_logs(
+    return AuditLogData(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       action_type: attachedDatabase.typeMapping
@@ -2698,13 +2817,13 @@ class $AuditLogTable extends AuditLog
   }
 }
 
-class audit_logs extends DataClass implements Insertable<audit_logs> {
+class AuditLogData extends DataClass implements Insertable<AuditLogData> {
   final int id;
   final String action_type;
   final String user;
   final DateTime timestamp;
   final String description;
-  const audit_logs(
+  const AuditLogData(
       {required this.id,
       required this.action_type,
       required this.user,
@@ -2731,10 +2850,10 @@ class audit_logs extends DataClass implements Insertable<audit_logs> {
     );
   }
 
-  factory audit_logs.fromJson(Map<String, dynamic> json,
+  factory AuditLogData.fromJson(Map<String, dynamic> json,
       {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return audit_logs(
+    return AuditLogData(
       id: serializer.fromJson<int>(json['id']),
       action_type: serializer.fromJson<String>(json['action_type']),
       user: serializer.fromJson<String>(json['user']),
@@ -2754,21 +2873,21 @@ class audit_logs extends DataClass implements Insertable<audit_logs> {
     };
   }
 
-  audit_logs copyWith(
+  AuditLogData copyWith(
           {int? id,
           String? action_type,
           String? user,
           DateTime? timestamp,
           String? description}) =>
-      audit_logs(
+      AuditLogData(
         id: id ?? this.id,
         action_type: action_type ?? this.action_type,
         user: user ?? this.user,
         timestamp: timestamp ?? this.timestamp,
         description: description ?? this.description,
       );
-  audit_logs copyWithCompanion(AuditLogCompanion data) {
-    return audit_logs(
+  AuditLogData copyWithCompanion(AuditLogCompanion data) {
+    return AuditLogData(
       id: data.id.present ? data.id.value : this.id,
       action_type:
           data.action_type.present ? data.action_type.value : this.action_type,
@@ -2781,7 +2900,7 @@ class audit_logs extends DataClass implements Insertable<audit_logs> {
 
   @override
   String toString() {
-    return (StringBuffer('audit_logs(')
+    return (StringBuffer('AuditLogData(')
           ..write('id: $id, ')
           ..write('action_type: $action_type, ')
           ..write('user: $user, ')
@@ -2797,7 +2916,7 @@ class audit_logs extends DataClass implements Insertable<audit_logs> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is audit_logs &&
+      (other is AuditLogData &&
           other.id == this.id &&
           other.action_type == this.action_type &&
           other.user == this.user &&
@@ -2805,7 +2924,7 @@ class audit_logs extends DataClass implements Insertable<audit_logs> {
           other.description == this.description);
 }
 
-class AuditLogCompanion extends UpdateCompanion<audit_logs> {
+class AuditLogCompanion extends UpdateCompanion<AuditLogData> {
   final Value<int> id;
   final Value<String> action_type;
   final Value<String> user;
@@ -2828,7 +2947,7 @@ class AuditLogCompanion extends UpdateCompanion<audit_logs> {
         user = Value(user),
         timestamp = Value(timestamp),
         description = Value(description);
-  static Insertable<audit_logs> custom({
+  static Insertable<AuditLogData> custom({
     Expression<int>? id,
     Expression<String>? action_type,
     Expression<String>? user,
@@ -2926,16 +3045,20 @@ abstract class _$AppDatabase extends GeneratedDatabase {
 typedef $$ProductTableCreateCompanionBuilder = ProductCompanion Function({
   Value<int> id,
   required String name,
+  required String description,
   required double price,
   required int stock,
-  required String description,
+  required String sku,
+  required int artworkId,
 });
 typedef $$ProductTableUpdateCompanionBuilder = ProductCompanion Function({
   Value<int> id,
   Value<String> name,
+  Value<String> description,
   Value<double> price,
   Value<int> stock,
-  Value<String> description,
+  Value<String> sku,
+  Value<int> artworkId,
 });
 
 class $$ProductTableFilterComposer
@@ -2953,14 +3076,20 @@ class $$ProductTableFilterComposer
   ColumnFilters<String> get name => $composableBuilder(
       column: $table.name, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
   ColumnFilters<double> get price => $composableBuilder(
       column: $table.price, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get stock => $composableBuilder(
       column: $table.stock, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get description => $composableBuilder(
-      column: $table.description, builder: (column) => ColumnFilters(column));
+  ColumnFilters<String> get sku => $composableBuilder(
+      column: $table.sku, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get artworkId => $composableBuilder(
+      column: $table.artworkId, builder: (column) => ColumnFilters(column));
 }
 
 class $$ProductTableOrderingComposer
@@ -2978,14 +3107,20 @@ class $$ProductTableOrderingComposer
   ColumnOrderings<String> get name => $composableBuilder(
       column: $table.name, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<double> get price => $composableBuilder(
       column: $table.price, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get stock => $composableBuilder(
       column: $table.stock, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get description => $composableBuilder(
-      column: $table.description, builder: (column) => ColumnOrderings(column));
+  ColumnOrderings<String> get sku => $composableBuilder(
+      column: $table.sku, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get artworkId => $composableBuilder(
+      column: $table.artworkId, builder: (column) => ColumnOrderings(column));
 }
 
 class $$ProductTableAnnotationComposer
@@ -3003,27 +3138,33 @@ class $$ProductTableAnnotationComposer
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
 
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
   GeneratedColumn<double> get price =>
       $composableBuilder(column: $table.price, builder: (column) => column);
 
   GeneratedColumn<int> get stock =>
       $composableBuilder(column: $table.stock, builder: (column) => column);
 
-  GeneratedColumn<String> get description => $composableBuilder(
-      column: $table.description, builder: (column) => column);
+  GeneratedColumn<String> get sku =>
+      $composableBuilder(column: $table.sku, builder: (column) => column);
+
+  GeneratedColumn<int> get artworkId =>
+      $composableBuilder(column: $table.artworkId, builder: (column) => column);
 }
 
 class $$ProductTableTableManager extends RootTableManager<
     _$AppDatabase,
     $ProductTable,
-    products,
+    ProductData,
     $$ProductTableFilterComposer,
     $$ProductTableOrderingComposer,
     $$ProductTableAnnotationComposer,
     $$ProductTableCreateCompanionBuilder,
     $$ProductTableUpdateCompanionBuilder,
-    (products, BaseReferences<_$AppDatabase, $ProductTable, products>),
-    products,
+    (ProductData, BaseReferences<_$AppDatabase, $ProductTable, ProductData>),
+    ProductData,
     PrefetchHooks Function()> {
   $$ProductTableTableManager(_$AppDatabase db, $ProductTable table)
       : super(TableManagerState(
@@ -3038,30 +3179,38 @@ class $$ProductTableTableManager extends RootTableManager<
           updateCompanionCallback: ({
             Value<int> id = const Value.absent(),
             Value<String> name = const Value.absent(),
+            Value<String> description = const Value.absent(),
             Value<double> price = const Value.absent(),
             Value<int> stock = const Value.absent(),
-            Value<String> description = const Value.absent(),
+            Value<String> sku = const Value.absent(),
+            Value<int> artworkId = const Value.absent(),
           }) =>
               ProductCompanion(
             id: id,
             name: name,
+            description: description,
             price: price,
             stock: stock,
-            description: description,
+            sku: sku,
+            artworkId: artworkId,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
             required String name,
+            required String description,
             required double price,
             required int stock,
-            required String description,
+            required String sku,
+            required int artworkId,
           }) =>
               ProductCompanion.insert(
             id: id,
             name: name,
+            description: description,
             price: price,
             stock: stock,
-            description: description,
+            sku: sku,
+            artworkId: artworkId,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -3073,20 +3222,21 @@ class $$ProductTableTableManager extends RootTableManager<
 typedef $$ProductTableProcessedTableManager = ProcessedTableManager<
     _$AppDatabase,
     $ProductTable,
-    products,
+    ProductData,
     $$ProductTableFilterComposer,
     $$ProductTableOrderingComposer,
     $$ProductTableAnnotationComposer,
     $$ProductTableCreateCompanionBuilder,
     $$ProductTableUpdateCompanionBuilder,
-    (products, BaseReferences<_$AppDatabase, $ProductTable, products>),
-    products,
+    (ProductData, BaseReferences<_$AppDatabase, $ProductTable, ProductData>),
+    ProductData,
     PrefetchHooks Function()>;
 typedef $$InvoiceTableCreateCompanionBuilder = InvoiceCompanion Function({
   Value<int> id,
   required int customer_id,
   required DateTime timestamp,
   required double subtotal,
+  required double total,
   required String discount_type,
   required double discount_amount,
   required double tendered,
@@ -3100,6 +3250,7 @@ typedef $$InvoiceTableUpdateCompanionBuilder = InvoiceCompanion Function({
   Value<int> customer_id,
   Value<DateTime> timestamp,
   Value<double> subtotal,
+  Value<double> total,
   Value<String> discount_type,
   Value<double> discount_amount,
   Value<double> tendered,
@@ -3129,6 +3280,9 @@ class $$InvoiceTableFilterComposer
 
   ColumnFilters<double> get subtotal => $composableBuilder(
       column: $table.subtotal, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get total => $composableBuilder(
+      column: $table.total, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get discount_type => $composableBuilder(
       column: $table.discount_type, builder: (column) => ColumnFilters(column));
@@ -3174,6 +3328,9 @@ class $$InvoiceTableOrderingComposer
 
   ColumnOrderings<double> get subtotal => $composableBuilder(
       column: $table.subtotal, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get total => $composableBuilder(
+      column: $table.total, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get discount_type => $composableBuilder(
       column: $table.discount_type,
@@ -3222,6 +3379,9 @@ class $$InvoiceTableAnnotationComposer
   GeneratedColumn<double> get subtotal =>
       $composableBuilder(column: $table.subtotal, builder: (column) => column);
 
+  GeneratedColumn<double> get total =>
+      $composableBuilder(column: $table.total, builder: (column) => column);
+
   GeneratedColumn<String> get discount_type => $composableBuilder(
       column: $table.discount_type, builder: (column) => column);
 
@@ -3247,14 +3407,14 @@ class $$InvoiceTableAnnotationComposer
 class $$InvoiceTableTableManager extends RootTableManager<
     _$AppDatabase,
     $InvoiceTable,
-    invoices,
+    InvoiceData,
     $$InvoiceTableFilterComposer,
     $$InvoiceTableOrderingComposer,
     $$InvoiceTableAnnotationComposer,
     $$InvoiceTableCreateCompanionBuilder,
     $$InvoiceTableUpdateCompanionBuilder,
-    (invoices, BaseReferences<_$AppDatabase, $InvoiceTable, invoices>),
-    invoices,
+    (InvoiceData, BaseReferences<_$AppDatabase, $InvoiceTable, InvoiceData>),
+    InvoiceData,
     PrefetchHooks Function()> {
   $$InvoiceTableTableManager(_$AppDatabase db, $InvoiceTable table)
       : super(TableManagerState(
@@ -3271,6 +3431,7 @@ class $$InvoiceTableTableManager extends RootTableManager<
             Value<int> customer_id = const Value.absent(),
             Value<DateTime> timestamp = const Value.absent(),
             Value<double> subtotal = const Value.absent(),
+            Value<double> total = const Value.absent(),
             Value<String> discount_type = const Value.absent(),
             Value<double> discount_amount = const Value.absent(),
             Value<double> tendered = const Value.absent(),
@@ -3284,6 +3445,7 @@ class $$InvoiceTableTableManager extends RootTableManager<
             customer_id: customer_id,
             timestamp: timestamp,
             subtotal: subtotal,
+            total: total,
             discount_type: discount_type,
             discount_amount: discount_amount,
             tendered: tendered,
@@ -3297,6 +3459,7 @@ class $$InvoiceTableTableManager extends RootTableManager<
             required int customer_id,
             required DateTime timestamp,
             required double subtotal,
+            required double total,
             required String discount_type,
             required double discount_amount,
             required double tendered,
@@ -3310,6 +3473,7 @@ class $$InvoiceTableTableManager extends RootTableManager<
             customer_id: customer_id,
             timestamp: timestamp,
             subtotal: subtotal,
+            total: total,
             discount_type: discount_type,
             discount_amount: discount_amount,
             tendered: tendered,
@@ -3328,14 +3492,14 @@ class $$InvoiceTableTableManager extends RootTableManager<
 typedef $$InvoiceTableProcessedTableManager = ProcessedTableManager<
     _$AppDatabase,
     $InvoiceTable,
-    invoices,
+    InvoiceData,
     $$InvoiceTableFilterComposer,
     $$InvoiceTableOrderingComposer,
     $$InvoiceTableAnnotationComposer,
     $$InvoiceTableCreateCompanionBuilder,
     $$InvoiceTableUpdateCompanionBuilder,
-    (invoices, BaseReferences<_$AppDatabase, $InvoiceTable, invoices>),
-    invoices,
+    (InvoiceData, BaseReferences<_$AppDatabase, $InvoiceTable, InvoiceData>),
+    InvoiceData,
     PrefetchHooks Function()>;
 typedef $$InvoiceProductTableCreateCompanionBuilder = InvoiceProductCompanion
     Function({
@@ -3432,17 +3596,17 @@ class $$InvoiceProductTableAnnotationComposer
 class $$InvoiceProductTableTableManager extends RootTableManager<
     _$AppDatabase,
     $InvoiceProductTable,
-    invoice_products,
+    InvoiceProductData,
     $$InvoiceProductTableFilterComposer,
     $$InvoiceProductTableOrderingComposer,
     $$InvoiceProductTableAnnotationComposer,
     $$InvoiceProductTableCreateCompanionBuilder,
     $$InvoiceProductTableUpdateCompanionBuilder,
     (
-      invoice_products,
-      BaseReferences<_$AppDatabase, $InvoiceProductTable, invoice_products>
+      InvoiceProductData,
+      BaseReferences<_$AppDatabase, $InvoiceProductTable, InvoiceProductData>
     ),
-    invoice_products,
+    InvoiceProductData,
     PrefetchHooks Function()> {
   $$InvoiceProductTableTableManager(
       _$AppDatabase db, $InvoiceProductTable table)
@@ -3493,17 +3657,17 @@ class $$InvoiceProductTableTableManager extends RootTableManager<
 typedef $$InvoiceProductTableProcessedTableManager = ProcessedTableManager<
     _$AppDatabase,
     $InvoiceProductTable,
-    invoice_products,
+    InvoiceProductData,
     $$InvoiceProductTableFilterComposer,
     $$InvoiceProductTableOrderingComposer,
     $$InvoiceProductTableAnnotationComposer,
     $$InvoiceProductTableCreateCompanionBuilder,
     $$InvoiceProductTableUpdateCompanionBuilder,
     (
-      invoice_products,
-      BaseReferences<_$AppDatabase, $InvoiceProductTable, invoice_products>
+      InvoiceProductData,
+      BaseReferences<_$AppDatabase, $InvoiceProductTable, InvoiceProductData>
     ),
-    invoice_products,
+    InvoiceProductData,
     PrefetchHooks Function()>;
 typedef $$RestockTableCreateCompanionBuilder = RestockCompanion Function({
   Value<int> id,
@@ -3598,14 +3762,14 @@ class $$RestockTableAnnotationComposer
 class $$RestockTableTableManager extends RootTableManager<
     _$AppDatabase,
     $RestockTable,
-    restocks,
+    RestockData,
     $$RestockTableFilterComposer,
     $$RestockTableOrderingComposer,
     $$RestockTableAnnotationComposer,
     $$RestockTableCreateCompanionBuilder,
     $$RestockTableUpdateCompanionBuilder,
-    (restocks, BaseReferences<_$AppDatabase, $RestockTable, restocks>),
-    restocks,
+    (RestockData, BaseReferences<_$AppDatabase, $RestockTable, RestockData>),
+    RestockData,
     PrefetchHooks Function()> {
   $$RestockTableTableManager(_$AppDatabase db, $RestockTable table)
       : super(TableManagerState(
@@ -3655,14 +3819,14 @@ class $$RestockTableTableManager extends RootTableManager<
 typedef $$RestockTableProcessedTableManager = ProcessedTableManager<
     _$AppDatabase,
     $RestockTable,
-    restocks,
+    RestockData,
     $$RestockTableFilterComposer,
     $$RestockTableOrderingComposer,
     $$RestockTableAnnotationComposer,
     $$RestockTableCreateCompanionBuilder,
     $$RestockTableUpdateCompanionBuilder,
-    (restocks, BaseReferences<_$AppDatabase, $RestockTable, restocks>),
-    restocks,
+    (RestockData, BaseReferences<_$AppDatabase, $RestockTable, RestockData>),
+    RestockData,
     PrefetchHooks Function()>;
 typedef $$CustomerTableCreateCompanionBuilder = CustomerCompanion Function({
   Value<int> id,
@@ -3758,14 +3922,14 @@ class $$CustomerTableAnnotationComposer
 class $$CustomerTableTableManager extends RootTableManager<
     _$AppDatabase,
     $CustomerTable,
-    customers,
+    CustomerData,
     $$CustomerTableFilterComposer,
     $$CustomerTableOrderingComposer,
     $$CustomerTableAnnotationComposer,
     $$CustomerTableCreateCompanionBuilder,
     $$CustomerTableUpdateCompanionBuilder,
-    (customers, BaseReferences<_$AppDatabase, $CustomerTable, customers>),
-    customers,
+    (CustomerData, BaseReferences<_$AppDatabase, $CustomerTable, CustomerData>),
+    CustomerData,
     PrefetchHooks Function()> {
   $$CustomerTableTableManager(_$AppDatabase db, $CustomerTable table)
       : super(TableManagerState(
@@ -3815,14 +3979,14 @@ class $$CustomerTableTableManager extends RootTableManager<
 typedef $$CustomerTableProcessedTableManager = ProcessedTableManager<
     _$AppDatabase,
     $CustomerTable,
-    customers,
+    CustomerData,
     $$CustomerTableFilterComposer,
     $$CustomerTableOrderingComposer,
     $$CustomerTableAnnotationComposer,
     $$CustomerTableCreateCompanionBuilder,
     $$CustomerTableUpdateCompanionBuilder,
-    (customers, BaseReferences<_$AppDatabase, $CustomerTable, customers>),
-    customers,
+    (CustomerData, BaseReferences<_$AppDatabase, $CustomerTable, CustomerData>),
+    CustomerData,
     PrefetchHooks Function()>;
 typedef $$SupplierTableCreateCompanionBuilder = SupplierCompanion Function({
   Value<int> id,
@@ -3884,14 +4048,14 @@ class $$SupplierTableAnnotationComposer
 class $$SupplierTableTableManager extends RootTableManager<
     _$AppDatabase,
     $SupplierTable,
-    suppliers,
+    SupplierData,
     $$SupplierTableFilterComposer,
     $$SupplierTableOrderingComposer,
     $$SupplierTableAnnotationComposer,
     $$SupplierTableCreateCompanionBuilder,
     $$SupplierTableUpdateCompanionBuilder,
-    (suppliers, BaseReferences<_$AppDatabase, $SupplierTable, suppliers>),
-    suppliers,
+    (SupplierData, BaseReferences<_$AppDatabase, $SupplierTable, SupplierData>),
+    SupplierData,
     PrefetchHooks Function()> {
   $$SupplierTableTableManager(_$AppDatabase db, $SupplierTable table)
       : super(TableManagerState(
@@ -3929,14 +4093,14 @@ class $$SupplierTableTableManager extends RootTableManager<
 typedef $$SupplierTableProcessedTableManager = ProcessedTableManager<
     _$AppDatabase,
     $SupplierTable,
-    suppliers,
+    SupplierData,
     $$SupplierTableFilterComposer,
     $$SupplierTableOrderingComposer,
     $$SupplierTableAnnotationComposer,
     $$SupplierTableCreateCompanionBuilder,
     $$SupplierTableUpdateCompanionBuilder,
-    (suppliers, BaseReferences<_$AppDatabase, $SupplierTable, suppliers>),
-    suppliers,
+    (SupplierData, BaseReferences<_$AppDatabase, $SupplierTable, SupplierData>),
+    SupplierData,
     PrefetchHooks Function()>;
 typedef $$InventoryAdjustmentTableCreateCompanionBuilder
     = InventoryAdjustmentCompanion Function({
@@ -4033,18 +4197,18 @@ class $$InventoryAdjustmentTableAnnotationComposer
 class $$InventoryAdjustmentTableTableManager extends RootTableManager<
     _$AppDatabase,
     $InventoryAdjustmentTable,
-    inventory_adjustments,
+    InventoryAdjustmentData,
     $$InventoryAdjustmentTableFilterComposer,
     $$InventoryAdjustmentTableOrderingComposer,
     $$InventoryAdjustmentTableAnnotationComposer,
     $$InventoryAdjustmentTableCreateCompanionBuilder,
     $$InventoryAdjustmentTableUpdateCompanionBuilder,
     (
-      inventory_adjustments,
+      InventoryAdjustmentData,
       BaseReferences<_$AppDatabase, $InventoryAdjustmentTable,
-          inventory_adjustments>
+          InventoryAdjustmentData>
     ),
-    inventory_adjustments,
+    InventoryAdjustmentData,
     PrefetchHooks Function()> {
   $$InventoryAdjustmentTableTableManager(
       _$AppDatabase db, $InventoryAdjustmentTable table)
@@ -4097,18 +4261,18 @@ class $$InventoryAdjustmentTableTableManager extends RootTableManager<
 typedef $$InventoryAdjustmentTableProcessedTableManager = ProcessedTableManager<
     _$AppDatabase,
     $InventoryAdjustmentTable,
-    inventory_adjustments,
+    InventoryAdjustmentData,
     $$InventoryAdjustmentTableFilterComposer,
     $$InventoryAdjustmentTableOrderingComposer,
     $$InventoryAdjustmentTableAnnotationComposer,
     $$InventoryAdjustmentTableCreateCompanionBuilder,
     $$InventoryAdjustmentTableUpdateCompanionBuilder,
     (
-      inventory_adjustments,
+      InventoryAdjustmentData,
       BaseReferences<_$AppDatabase, $InventoryAdjustmentTable,
-          inventory_adjustments>
+          InventoryAdjustmentData>
     ),
-    inventory_adjustments,
+    InventoryAdjustmentData,
     PrefetchHooks Function()>;
 typedef $$ProductVariantTableCreateCompanionBuilder = ProductVariantCompanion
     Function({
@@ -4208,17 +4372,17 @@ class $$ProductVariantTableAnnotationComposer
 class $$ProductVariantTableTableManager extends RootTableManager<
     _$AppDatabase,
     $ProductVariantTable,
-    product_variants,
+    ProductVariantData,
     $$ProductVariantTableFilterComposer,
     $$ProductVariantTableOrderingComposer,
     $$ProductVariantTableAnnotationComposer,
     $$ProductVariantTableCreateCompanionBuilder,
     $$ProductVariantTableUpdateCompanionBuilder,
     (
-      product_variants,
-      BaseReferences<_$AppDatabase, $ProductVariantTable, product_variants>
+      ProductVariantData,
+      BaseReferences<_$AppDatabase, $ProductVariantTable, ProductVariantData>
     ),
-    product_variants,
+    ProductVariantData,
     PrefetchHooks Function()> {
   $$ProductVariantTableTableManager(
       _$AppDatabase db, $ProductVariantTable table)
@@ -4269,17 +4433,17 @@ class $$ProductVariantTableTableManager extends RootTableManager<
 typedef $$ProductVariantTableProcessedTableManager = ProcessedTableManager<
     _$AppDatabase,
     $ProductVariantTable,
-    product_variants,
+    ProductVariantData,
     $$ProductVariantTableFilterComposer,
     $$ProductVariantTableOrderingComposer,
     $$ProductVariantTableAnnotationComposer,
     $$ProductVariantTableCreateCompanionBuilder,
     $$ProductVariantTableUpdateCompanionBuilder,
     (
-      product_variants,
-      BaseReferences<_$AppDatabase, $ProductVariantTable, product_variants>
+      ProductVariantData,
+      BaseReferences<_$AppDatabase, $ProductVariantTable, ProductVariantData>
     ),
-    product_variants,
+    ProductVariantData,
     PrefetchHooks Function()>;
 typedef $$AuditLogTableCreateCompanionBuilder = AuditLogCompanion Function({
   Value<int> id,
@@ -4374,14 +4538,14 @@ class $$AuditLogTableAnnotationComposer
 class $$AuditLogTableTableManager extends RootTableManager<
     _$AppDatabase,
     $AuditLogTable,
-    audit_logs,
+    AuditLogData,
     $$AuditLogTableFilterComposer,
     $$AuditLogTableOrderingComposer,
     $$AuditLogTableAnnotationComposer,
     $$AuditLogTableCreateCompanionBuilder,
     $$AuditLogTableUpdateCompanionBuilder,
-    (audit_logs, BaseReferences<_$AppDatabase, $AuditLogTable, audit_logs>),
-    audit_logs,
+    (AuditLogData, BaseReferences<_$AppDatabase, $AuditLogTable, AuditLogData>),
+    AuditLogData,
     PrefetchHooks Function()> {
   $$AuditLogTableTableManager(_$AppDatabase db, $AuditLogTable table)
       : super(TableManagerState(
@@ -4431,14 +4595,14 @@ class $$AuditLogTableTableManager extends RootTableManager<
 typedef $$AuditLogTableProcessedTableManager = ProcessedTableManager<
     _$AppDatabase,
     $AuditLogTable,
-    audit_logs,
+    AuditLogData,
     $$AuditLogTableFilterComposer,
     $$AuditLogTableOrderingComposer,
     $$AuditLogTableAnnotationComposer,
     $$AuditLogTableCreateCompanionBuilder,
     $$AuditLogTableUpdateCompanionBuilder,
-    (audit_logs, BaseReferences<_$AppDatabase, $AuditLogTable, audit_logs>),
-    audit_logs,
+    (AuditLogData, BaseReferences<_$AppDatabase, $AuditLogTable, AuditLogData>),
+    AuditLogData,
     PrefetchHooks Function()>;
 
 class $AppDatabaseManager {

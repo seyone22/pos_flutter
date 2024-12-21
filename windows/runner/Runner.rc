@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "pos_flutter" "\0"
+            VALUE "CompanyName", "Seyone Gunasingham" "\0"
+            VALUE "FileDescription", "Anime.lk POS Application" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "pos_flutter" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2024 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "pos_flutter.exe" "\0"
-            VALUE "ProductName", "pos_flutter" "\0"
+            VALUE "InternalName", "POS" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2024 Seyone Gunasingham. All rights reserved." "\0"
+            VALUE "OriginalFilename", "AnimeLKPos.exe" "\0"
+            VALUE "ProductName", "Anime.lk POS" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
