@@ -27,6 +27,7 @@ class StatisticsBloc extends Bloc<StatisticsEvent, StatisticsState> {
     Map<String, double>? salesByPaymentMethod,
     Map<String, double>? salesByArtist,
     Map<String, double>? salesByItemCategory,
+    Map<String, double>? salesByProduct,
   }) async {
     if (state is StatisticsLoaded) {
       final previous = state as StatisticsLoaded;
@@ -42,6 +43,7 @@ class StatisticsBloc extends Bloc<StatisticsEvent, StatisticsState> {
         salesByArtist: salesByArtist ?? previous.salesByArtist,
         salesByItemCategory:
             salesByItemCategory ?? previous.salesByItemCategory,
+        salesByProduct: salesByProduct ?? previous.salesByProduct
       ));
     }
   }
@@ -194,7 +196,9 @@ class StatisticsBloc extends Bloc<StatisticsEvent, StatisticsState> {
           keyExtractor: (invoiceProduct) async {
             final product = await productRepository
                 .getProductById(invoiceProduct.product_id);
-            final prefix = product.name.substring(0, 3).toUpperCase(); // Extract type prefix
+            final prefix = product.name
+                .substring(0, 3)
+                .toUpperCase(); // Extract type prefix
             // Categorize based on prefix
             return prefix == 'NPP' ? 'NPP' : 'APP';
           },
@@ -202,7 +206,8 @@ class StatisticsBloc extends Bloc<StatisticsEvent, StatisticsState> {
 
         debugPrint('Length: ${valueByItemCategory.length}');
 
-        await _emitUpdatedStatistics(emit, salesByItemCategory: valueByItemCategory);
+        await _emitUpdatedStatistics(emit,
+            salesByItemCategory: valueByItemCategory);
       } catch (e) {
         emit(StatisticsError(message: e.toString()));
       }
@@ -247,6 +252,29 @@ class StatisticsBloc extends Bloc<StatisticsEvent, StatisticsState> {
         }
 
         _emitUpdatedStatistics(emit, salesHistory: salesHistory);
+      } catch (e) {
+        emit(StatisticsError(message: e.toString()));
+      }
+    });
+
+    on<LoadSalesByProduct>((event, emit) async {
+      try {
+        // Fetch invoices within the date range
+        final invoices = await invoiceRepository.getInvoicesByDateRange(
+            event.dateRange.start, event.dateRange.end);
+
+        // Group sales values by product
+        final valueByProduct = await groupByField(
+          invoices: invoices,
+          metric: event.metric,
+          keyExtractor: (invoiceProduct) async {
+            final product = await productRepository
+                .getProductById(invoiceProduct.product_id);
+            return product.id.toString(); // Extract artist prefix
+          },
+        );
+
+        await _emitUpdatedStatistics(emit, salesByProduct: valueByProduct);
       } catch (e) {
         emit(StatisticsError(message: e.toString()));
       }
